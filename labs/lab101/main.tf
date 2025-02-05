@@ -34,4 +34,11 @@ resource "time_sleep" "wait_for_ip" {
   create_duration = "30s"  # Introduce a delay of 30 seconds
 }
 
+resource "null_resource" "run_script_echo" {
+  depends_on = [time_sleep.wait_for_ip]
+  provisioner "local-exec" {
+    command = "echo 'Hello Jb Class'"
+  }
+}
+
 

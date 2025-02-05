@@ -7,10 +7,23 @@ terraform {
   }
 }
 
+terraform {
+  required_providers {
+    null = {
+      source = "hashicorp/null"
+      version = "3.2.3"
+    }
+  }
+}
+
 provider "aws" {
   region = var.region
 }
 
 provider "time" {
+  # Configuration options
+}
+
+provider "null" {
   # Configuration options
 }

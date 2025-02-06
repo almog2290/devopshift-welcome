@@ -15,6 +15,6 @@ output "region" {
 }
 
 output "port" {
-    value = var.port
-    description = "Open port"
+    value = var.ports
+    description = "Open ports"
 }

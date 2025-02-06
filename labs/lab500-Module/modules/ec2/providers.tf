@@ -14,11 +14,3 @@ terraform {
 provider "aws" {
   region = var.region
 }
-
-provider "time" {
-  # Configuration options
-}
-
-provider "null" {
-  # Configuration options
-}

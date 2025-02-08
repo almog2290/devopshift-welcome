@@ -33,3 +33,8 @@ output "private_route_table_id" {
   description = "The ID of the private route table"
   value       = aws_route_table.private_rt.id
 }
+
+output "availability_zone_selection" {
+  description = "The availability zone selection"
+  value       = random_shuffle.random_az.result
+}

@@ -1,7 +1,6 @@
 # Create a VPC with a public and private subnet
 resource "aws_vpc" "vpc" {
-
-    cidr_block           = "10.0.0.0/16"
+    cidr_block           = var.cidr_block
     enable_dns_support   = true
     enable_dns_hostnames = true
 
@@ -16,7 +15,8 @@ resource "aws_subnet" "subnet_1" {
     vpc_id            = aws_vpc.vpc.id
     cidr_block        = "10.0.1.0/24"
     map_public_ip_on_launch = true #Subnet 1 is public
-
+    availability_zone = random_shuffle.random_az.result[0]
+    
     tags = {
         Name = "${var.instance_name}-public-subnet"
     }
@@ -28,6 +28,7 @@ resource "aws_subnet" "subnet_2" {
     vpc_id            = aws_vpc.vpc.id
     cidr_block        = "10.0.2.0/24"
     map_public_ip_on_launch = false #Subnet 2 is private
+    availability_zone = random_shuffle.random_az.result[1]
 
     tags = {
         Name = "${var.instance_name}-private-subnet"
@@ -80,4 +81,9 @@ resource "aws_route_table_association" "public_rt_connect" {
 resource "aws_route_table_association" "private_rt_connect" {
     subnet_id      = aws_subnet.subnet_2.id
     route_table_id = aws_route_table.private_rt.id
+}
+
+resource "random_shuffle" "random_az" {
+  input        = var.az_list
+  result_count = 2
 }

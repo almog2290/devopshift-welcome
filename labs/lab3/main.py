@@ -1,22 +1,34 @@
 from dataclasses import dataclass
 from fastapi import FastAPI
-from tools import check_server_exsist ,servers
+from models import Server , ServerStatusResponse , add_new_server , read_server_list
+from models import check_server_exsist
 import httpx
 
 app = FastAPI()
 
-@app.get("/server/")
-def check_server(server_name: str):
-    return check_server_exsist(server_name)
+@app.get("/server")
+def get_server(srv: str):
+    return check_server_exsist(srv)
 
-@app.post("/server/")
-def put_server(server_name: str):
+@app.post("/server")
+def put_server(srv: str):
 
-    if server_name in servers:
-        return {"Server": server_name , "Status": "Allready exsist"}
+    if srv == "":
+        return ServerStatusResponse(server_name=srv,server_status="Invaild server name inserted")
 
-    servers[server_name] = True
-    return {"Server": server_name , "Status": "Server created"}
+    servers  = read_server_list()
+    if srv in servers:
+        return ServerStatusResponse(server_name=srv,server_status="Allready exsist")
+
+    new_server = Server(
+        name=srv,
+        online=True,
+        cpus=4,
+        ram=8
+    )
+
+    add_new_server(new_server)
+    return ServerStatusResponse(server_name=srv,server_status="Server created")
     
 
 

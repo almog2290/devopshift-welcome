@@ -47,3 +47,4 @@ terraform.rckeys/
 # Logs files
 *.log
 log.txt
+servers.txt

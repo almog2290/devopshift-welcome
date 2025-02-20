@@ -48,3 +48,4 @@ terraform.rckeys/
 *.log
 log.txt
 servers.txt
+junks/

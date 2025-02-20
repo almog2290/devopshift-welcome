@@ -43,7 +43,11 @@ def get_metrics(metrics: str):
         except httpx.HTTPError:
             print(f"Attempt {i + 1} failed: Server is currently down.")
             sleep(delay)
-            print(f"Retrying in {delay} seconds...")
+
+            if i == retry - 1:
+                print("All retry attempts failed.")
+            else:
+                print(f"Retrying in {delay} seconds...")
 
 
 user_id = input("User id: ")

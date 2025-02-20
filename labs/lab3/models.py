@@ -1,3 +1,4 @@
+from os import path
 from log import setup_logging
 from pydantic import BaseModel, ValidationError
 import json
@@ -16,6 +17,10 @@ class Server(BaseModel):
 
 
 def read_server_list() -> dict[str: Server]:
+    if not path.exists("servers.txt"):
+        with open("servers.txt", "w") as f:
+            pass 
+
     with open("servers.txt", "r") as f:
         servers: dict[str: Server] = {}
         for line in f.readlines():
@@ -42,10 +47,11 @@ def check_server_exsist(srv: str):
         elif servers[srv].online == True:
             logger.info(f"The server {srv} is running")
             return ServerStatusResponse(server_name=srv,server_status=True)
-    except KeyError as err:
+    except KeyError or FileNotFoundError as err:
         logger.error(f"Error Msg:{err}")
         return ServerStatusResponse(server_name=srv,server_status=f"The value key {err} not recognized")
-    except ValueError as err:
+    # VauleError or FileNotFoundError and other exceptions
+    except Exception as err:
         logger.error(f"Error Msg:{err}")
         return ServerStatusResponse(server_name=None,server_status=f"{err}")
 

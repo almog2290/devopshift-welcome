@@ -7,28 +7,21 @@ import httpx
 app = FastAPI()
 
 @app.get("/server")
-def get_server(srv: str):
+def get_server(srv: str) -> ServerStatusResponse:
     return check_server_exsist(srv)
 
 @app.post("/server")
-def put_server(srv: str):
+def put_server(srv: Server) -> ServerStatusResponse:
 
-    if srv == "":
-        return ServerStatusResponse(server_name=srv,server_status="Invaild server name inserted")
+    if srv.name == "":
+        return ServerStatusResponse(server_name=srv.name,server_status="Invaild server name inserted")
 
     servers  = read_server_list()
-    if srv in servers:
-        return ServerStatusResponse(server_name=srv,server_status="Allready exsist")
+    if srv.name in servers:
+        return ServerStatusResponse(server_name=srv.name,server_status="Allready exsist")
 
-    new_server = Server(
-        name=srv,
-        online=True,
-        cpus=4,
-        ram=8
-    )
-
-    add_new_server(new_server)
-    return ServerStatusResponse(server_name=srv,server_status="Server created")
+    add_new_server(srv)
+    return ServerStatusResponse(server_name=srv.name,server_status="Server created")
     
 
 

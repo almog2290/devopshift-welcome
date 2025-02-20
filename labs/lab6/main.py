@@ -1,69 +1,81 @@
 from typing import Callable
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError , BotoCoreError
 from nice import print_title
 
 def list_s3_buckets():
     """Lists all S3 buckets."""
-    s3_client = boto3.client("s3")
     try:
+        s3_client = boto3.client("s3")
         response = s3_client.list_buckets()
         print("\nS3 Buckets:")
         for bucket in response["Buckets"]:
             print(f"- {bucket['Name']}")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
+    except BotoCoreError as e:
+        print(f"Error: {e}")
 
 def create_s3_bucket():
     """Creates an S3 bucket."""
-    s3_client = boto3.client("s3")
-    bucket_name = input("Enter the name for the new bucket: ")
     try:
+        s3_client = boto3.client("s3")
+        bucket_name = input("Enter the name for the new bucket: ")
         s3_client.create_bucket(Bucket=bucket_name)
         print(f"Bucket '{bucket_name}' created successfully!")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
+    except BotoCoreError as e:
+        print(f"Error: {e}")
 
 def delete_s3_bucket():
     """Deletes an S3 bucket."""
-    s3_client = boto3.client("s3")
-    bucket_name = input("Enter the name of the bucket to delete: ")
     try:
+        s3_client = boto3.client("s3")
+        bucket_name = input("Enter the name of the bucket to delete: ")
         s3_client.delete_bucket(Bucket=bucket_name)
         print(f"Bucket '{bucket_name}' deleted successfully!")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
+    except BotoCoreError as e:
+        print(f"Error: {e}")
 
 def list_ec2_instances():
     """Lists all running EC2 instances."""
-    ec2_client = boto3.client("ec2")
     try:
+        ec2_client = boto3.client("ec2")
         response = ec2_client.describe_instances()
         for reservation in response["Reservations"]:
             for instance in reservation["Instances"]:
                 print(f"Instance ID: {instance['InstanceId']} - State: {instance['State']['Name']}")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
+    except BotoCoreError as e:
+        print(f"Error: {e}")
 
 def start_ec2_instance():
     """Starts an EC2 instance."""
-    ec2_client = boto3.client("ec2")
-    instance_id = input("Enter the Instance ID to start: ")
     try:
+        ec2_client = boto3.client("ec2")
+        instance_id = input("Enter the Instance ID to start: ")
         ec2_client.start_instances(InstanceIds=[instance_id])
         print(f"Starting EC2 instance {instance_id}")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
+    except BotoCoreError as e:
+        print(f"Error: {e}")
 
 def stop_ec2_instance():
     """Stops an EC2 instance."""
-    ec2_client = boto3.client("ec2")
-    instance_id = input("Enter the Instance ID to stop: ")
     try:
+        ec2_client = boto3.client("ec2")
+        instance_id = input("Enter the Instance ID to stop: ")
         ec2_client.stop_instances(InstanceIds=[instance_id])
         print(f"Stopping EC2 instance {instance_id}")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
+    except BotoCoreError as e:
+        print(f"Error: {e}")
 
 
 ###################### Menu Methods ############################

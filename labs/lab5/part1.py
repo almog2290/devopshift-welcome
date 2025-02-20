@@ -1,10 +1,9 @@
 import subprocess
 
-command = "ls -la"
+command = "ls -la | grep part | awk -F ' ' '{print $9}'"
 
 try:
-    p = subprocess.run(command.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-
+    p = subprocess.run(command,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if p.returncode == 0 :
         print (p.stdout.decode())
     else:

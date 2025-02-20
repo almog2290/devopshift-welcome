@@ -21,14 +21,13 @@ def setup_logging():
     stdout_handler = logging.StreamHandler(sys.stdout)
     file_handler = logging.FileHandler("myapp.log")
 
-
     if log_format == "JSON" :
-        stdout_handler.setFormatter(JsonFromatter())
-        file_handler.setFormatter(JsonFromatter())
+        formatter = JsonFromatter()
     else:
-        stdout_handler.setFormatter(logging.Formatter())
-        file_handler.setFormatter(logging.Formatter())
+        formatter=logging.Formatter("%(asctime)s:%(name)s:%(levelname)s:%(module)s:%(lineno)d:%(funcName)s:%(message)s")
 
+    stdout_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
     logger.addHandler(stdout_handler)
     logger.addHandler(file_handler)  
     return logger

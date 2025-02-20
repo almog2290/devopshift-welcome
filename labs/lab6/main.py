@@ -1,7 +1,7 @@
 from typing import Callable
 import boto3
 from botocore.exceptions import ClientError
-#from nice import print_title
+from nice import print_title
 
 def list_s3_buckets():
     """Lists all S3 buckets."""
@@ -124,7 +124,8 @@ if __name__ == "__main__":
     2. Manage EC2 Instances
     3. Press q to exit
     Choose an option: """
-    #print_title("BOTO!")
+    
+    print_title("AM-DEV")
     user_choice(main_menu, {"1": manage_s3, "2": manage_ec2 })
 
 

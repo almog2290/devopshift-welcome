@@ -48,11 +48,11 @@ def check_server_exsist(srv: str):
             logger.info(f"The server {srv} is running")
             return ServerStatusResponse(server_name=srv,server_status=True)
     except KeyError or FileNotFoundError as err:
-        logger.error(f"Error Msg:{err}")
+        logger.error(f"error msg => The value key {err} not recognized")
         return ServerStatusResponse(server_name=srv,server_status=f"The value key {err} not recognized")
     # VauleError or FileNotFoundError and other exceptions
     except Exception as err:
-        logger.error(f"Error Msg:{err}")
+        logger.error(f"error msg => {err}")
         return ServerStatusResponse(server_name=None,server_status=f"{err}")
 
     logger.info(f"The server {srv} is not running")

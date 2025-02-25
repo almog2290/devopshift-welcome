@@ -3,8 +3,8 @@ kind: StatefulSet
 metadata:
   name: mysql-statefulset
 spec:
-  replicas: 3
-  serviceName: "mysqldb-service"
+  replicas: 1
+  serviceName: "mysqldb"
   selector:
     matchLabels:
       app: mysql
@@ -15,9 +15,14 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: mysql:5.7
+        image: mysql:8.0
         ports:
         - containerPort: 3306
+        env:
+          - name: MYSQL_DATABASE
+            value: crypto_db
+          - name: MYSQL_ROOT_PASSWORD
+            value: "123456"        
         volumeMounts:
         - name: mysql-storage
           mountPath: /var/lib/mysql
@@ -29,3 +34,15 @@ spec:
       resources:
         requests:
           storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306     
+      targetPort: 3306

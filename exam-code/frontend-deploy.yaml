@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: front-deployment
+  name: frontend-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: front
+      app: frontend
   template:
     metadata:
       labels:
-        app: front
+        app: frontend
     spec:
       containers:
-      - name: front
-        image: madaralmog/docker-web:1.0
+      - name: frontend
+        image: madaralmog/docker-web:2.1
         ports:
         - containerPort: 5002
 ---
@@ -25,7 +25,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: front
+    app: frontend
   ports:
     - protocol: TCP
       port: 80     

@@ -1,0 +1,3 @@
+GITBRANCH=istio-workshp
+GITURL=github.com/almog2290/devopshift-welcome.git
+GITUSERNAME=almog2290

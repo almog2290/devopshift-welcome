@@ -1,0 +1,141 @@
+pipeline {
+    agent any
+
+    parameters {
+        booleanParam(defaultValue: false, description: 'Build Docker image?', name: 'BUILD_DOCKER')
+        booleanParam(defaultValue: false, description: 'Run on different platforms and browsers?', name: 'RUN_ON_DIFFERENT_PLATFORMS')
+        booleanParam(defaultValue: false, description: 'Run parallel stages?', name: 'RUN_PARALLEL')
+    }
+
+    environment {
+        BUILD_DOCKER = "${params.BUILD_DOCKER}"
+    }
+
+    stages {
+        stage('Build'){
+            steps{
+                sh '''
+                    echo "Building the project"
+                '''
+            }
+        }
+
+        stage('unit tests'){
+            steps{
+                sh '''
+                    echo "Running tests"
+                '''
+            }
+        }
+
+        stage('Build Docker image'){
+            when {
+                environment name: 'BUILD_DOCKER', value: 'true'
+            }
+            steps{
+                sh '''
+                    echo "Building Docker image"
+                '''
+            }
+        }
+
+        stage('make cat bash command in parallel'){
+            when {
+                environment name: 'RUN_PARALLEL', value: 'true'
+            }
+            parallel{
+                stage('Cat 1 (parallel 1)'){
+                    steps{
+                        dir('welcome/jenkins/pipelines-demos/ex1'){
+                            sh '''
+                                ls -l
+                                cat team1.txt
+                                echo "i am the first cat"
+                            '''
+                        }
+                    }
+                }
+                stage('Cat 2 (parallel 2)'){
+                    steps{
+                        dir('welcome/jenkins/pipelines-demos/ex1'){
+                            sh '''
+                                ls -l
+                                cat team2.txt
+                                echo "i am the second cat"
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('run on different platforms browser - matrix'){
+            when{
+                environment name: 'RUN_ON_DIFFERENT_PLATFORMS', value: 'true'
+            }
+            matrix{
+                axes{
+                    axis{
+                        name 'PLATFORM'
+                        values 'linux', 'mac', 'windows'
+                    }
+                    axis {
+                        name 'BROWSER'
+                        values 'chrome', 'edge', 'firefox', 'safari'
+                    }
+                }
+                stages{
+                    stage('cat command'){
+                        steps{
+                            dir('welcome/jenkins/pipelines-demos/ex1'){
+
+                                sh '''
+                                    echo "Running on ${PLATFORM}"
+                                    echo "the ${BROWSER} application"
+                                    cat team2.txt
+                                    echo "i am ${PLATFORM} with ${BROWSER}" > ${PLATFORM}_${BROWSER}.txt
+                                '''
+
+                                archiveArtifacts artifacts: "${PLATFORM}_${BROWSER}.txt" , allowEmptyArchive: true
+                            }
+                        }
+                    }
+                }
+            }
+        } // end of matrix
+
+        stage('logic if parallel and matrix is true'){
+            when {
+                allOf {
+                    expression { params.RUN_PARALLEL == true } 
+                    expression { params.RUN_ON_DIFFERENT_PLATFORMS == true }
+                }
+            }
+            steps{
+                echo 'Both RUN_PARALLEL and RUN_ON_DIFFERENT_PLATFORMS are true'
+            }
+        }
+    } // end of stages
+
+
+
+
+    post {
+        always {
+            echo 'This will always run'
+            cleanWs()
+        }
+        success {
+            echo 'This will run only if the pipeline is successful'
+        }
+        failure {
+            echo 'This will run only if the pipeline is broken'
+        }
+        unstable {
+            echo 'This will run only if the pipeline is unstable'
+        }
+        changed {
+            echo 'This will run only if the pipeline state has changed'
+        } 
+    }
+}

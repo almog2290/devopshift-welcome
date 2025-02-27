@@ -115,10 +115,10 @@ pipeline {
         success {
             echo 'Pipeline completed successfully'
             sh """
-                echo "lakers" > 111.log
+                cp flask_app.log flask_app_${env.BUILD_NUMBER}.log
             """
             archiveArtifacts artifacts: "flask_app_${env.BUILD_NUMBER}.log" , allowEmptyArchive: true
-
+        }
         aborted{
             echo 'Pipeline aborted by the user'
         }

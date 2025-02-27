@@ -19,6 +19,13 @@ pipeline {
                 }
             }
         }
+        stage('Lint') {
+            steps {
+                script {
+                    myLibDevops.lint()
+                }
+            }
+        }
 
         stage('Deploy') {
             steps {

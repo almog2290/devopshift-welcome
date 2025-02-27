@@ -115,7 +115,7 @@ pipeline {
         success {
             echo 'Pipeline completed successfully'
             sh """
-                echo "lakers" > flask_app_${env.BUILD_NUMBER}.log
+                echo "lakers" > 111.log
             """
             archiveArtifacts artifacts: "flask_app_${env.BUILD_NUMBER}.log" , allowEmptyArchive: true
 

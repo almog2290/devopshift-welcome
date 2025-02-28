@@ -1,0 +1,51 @@
+node {
+    // Define a reusable function
+    def runStage = { stageName, command ->
+        stage(stageName) {
+            echo "Starting stage: ${stageName}"
+            sh command
+        }
+    }
+
+    // Start the pipeline
+    stage('Clone') {
+        runStage('Clone', 'echo "Cloning repository..."')
+    }
+
+    stage('Build') {
+        runStage('Build', 'echo "Building Python project..."')
+    }
+
+    // Define parallel steps
+    stage('Parallel Tasks') {
+        parallel (
+            'Lint': {
+                runStage('Lint', 'echo "Running Python linting..."')
+            },
+            'Security Test': {
+                runStage('Security Test', 'echo "Running security tests..."')
+            }
+        )
+    }
+
+    // Optional deploy step
+    stage('Deploy to Production?') {
+        def userInput = input(
+            id: 'UserInput',
+            message: 'Deploy to production?',
+            parameters: [
+                [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Deploy?', name: 'Proceed']
+            ]
+        )
+        if (userInput) {
+            runStage('Deploy', 'echo "Deploying to production..."')
+        } else {
+            echo "Skipping deployment."
+        }
+    }
+
+    // Post actions
+    stage('Cleanup') {
+        runStage('Cleanup', 'echo "Cleaning up workspace..."')
+    }
+}

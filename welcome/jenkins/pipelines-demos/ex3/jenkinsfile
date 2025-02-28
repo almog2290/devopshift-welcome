@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        IMAGE_NAME = 'madar.almog/jenkins_pipe_ex3:latest'
+        DOCKERHUB_CREDENTIALS = 'dockerhub-mogli-creds'
+        IMAGE_NAME = 'madaralmog/jenkins_pipe_ex3:latest'
     }
 
     stages {

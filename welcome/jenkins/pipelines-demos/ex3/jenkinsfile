@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        IMAGE_NAME = 'madar.almog/jenkins_pipe_ex3:latest'
+    }
+
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                dir('welcome/jenkins/pipelines-demos/ex3'){
+                    script {
+                        echo "Building Docker image ${IMAGE_NAME}..."
+                        docker.build(env.IMAGE_NAME)
+                    }
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                dir('welcome/jenkins/pipelines-demos/ex3'){
+                    script {
+                        echo "Pushing Docker image to DockerHub..."
+                        docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
+                            def appImage = docker.image(env.IMAGE_NAME)
+                            appImage.push()
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                sh 'docker rmi ${IMAGE_NAME}'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+            cleanWs()
+        }
+    }
+}

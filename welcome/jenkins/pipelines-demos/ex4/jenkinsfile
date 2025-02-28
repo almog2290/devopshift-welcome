@@ -1,0 +1,144 @@
+pipeline {
+    agent { label 'linux || docker' }
+
+    environment {
+        PYTHON_VERSIONS = '3.8,3.9'
+        DOCKERHUB_CREDENTIALS = 'dockerhub-mogli-creds'
+        REPO_NAME = 'madaralmog'
+        APP_PATH = 'welcome/jenkins/pipelines-demos/ex4/app'
+    }
+
+    stages {
+
+        stage('Clone Python Project') {
+            steps {
+                git branch: 'jenkins-workshop', url: 'https://github.com/almog2290/devopshift-welcome.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PYTHON_VER'
+                        values 3.8 , 3.9
+                    }
+                }
+                stages {
+                    stage('Install') {
+                        agent {
+                            docker {
+                                image "python:${PYTHON_VER}" // Python version from the matrix
+                                args '-v $HOME/.cache/pip:/root/.cache/pip' // Mount the pip cache for reuse in future stages
+                                reuseNode true // Reuse the workspace for Docker containers
+                            }
+                        }
+                        steps {
+                            // Install the python faker library
+                            sh '''
+                                export HOME=${WORKSPACE}
+                                pip install --upgrade pip
+                                pip install faker
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Test Application') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PYTHON_VER' 
+                        values 3.8 , 3.9
+                    }
+                }
+                stages {
+                    stage('Run Test') {
+                        agent {
+                            docker {
+                                image "python:${PYTHON_VER}" 
+                                reuseNode true // Reuse the workspace for Docker containers
+                            }
+                        }
+                        steps {
+                            dir(env.APP_PATH){
+                                sh '''
+                                    export HOME=${WORKSPACE}
+                                    set -e  # Exit immediately if a command exits with a non-zero status
+                                    python app.py
+                                '''
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PYTHON_VER' 
+                        values 3.8 , 3.9
+                    }
+                }
+                stages {
+                    stage('Build Image') {
+                        steps {
+                            dir(env.APP_PATH){
+                                script {
+                                    def IMAGE_NAME = "${REPO_NAME}/faker:${PYTHON_VER}-slim-1.0"
+                                    echo "Building Docker image ${IMAGE_NAME}..."
+                                    docker.build(IMAGE_NAME)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PYTHON_VER' 
+                        values 3.8 , 3.9
+                    }
+                }
+                stages {
+                    stage('Push Image') {
+                        steps{
+                            script {
+                                def IMAGE_NAME = "${REPO_NAME}/faker:${PYTHON_VER}-slim-1.0"
+                                echo "Pushing Docker image to DockerHub..."
+                                docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
+                                    def appImage = docker.image(IMAGE_NAME)
+                                    appImage.push()
+                                }
+                            }
+                        }
+                    }
+
+                    stage('Clean Up') {
+                        steps {
+                            script{
+                                def IMAGE_NAME = "${REPO_NAME}/faker:${PYTHON_VER}-slim-1.0"
+                                sh "docker rmi ${IMAGE_NAME}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+            cleanWs()
+        }
+    }
+}

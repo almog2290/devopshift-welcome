@@ -91,7 +91,7 @@ pipeline {
                                 script {
                                     def IMAGE_NAME = "${REPO_NAME}/faker:${PYTHON_VER}-slim-1.0"
                                     echo "Building Docker image ${IMAGE_NAME}..."
-                                    docker.build(IMAGE_NAME)
+                                    docker.build(IMAGE_NAME, "--build-arg PYTHON_VERSION=${PYTHON_VER} .")
                                 }
                             }
                         }
@@ -117,6 +117,7 @@ pipeline {
                                 docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
                                     def appImage = docker.image(IMAGE_NAME)
                                     appImage.push()
+                                    
                                 }
                             }
                         }

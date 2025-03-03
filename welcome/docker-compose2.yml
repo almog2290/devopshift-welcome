@@ -7,8 +7,8 @@ services:
             - '8080:8080'
             - '50000:50000'
         volumes:
-            - './jenkins-docker-certs-master:/certs/client:ro'
-            - './jenkins-data-master:/var/jenkins_home'
+            - 'jenkins-docker-certs-master:/certs/client:ro'
+            - 'jenkins-data-master:/var/jenkins_home'
         networks: 
             - jb
     jenkins-slave:
@@ -23,7 +23,7 @@ services:
 
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - './jenkins-data-slave:/var/jenkins_home'
+            - 'jenkins-data-slave:/var/jenkins_home'
         networks: 
         - jb
         depends_on:
@@ -31,3 +31,11 @@ services:
 
 networks: 
   jb:
+
+volumes:
+    jenkins-data-master:
+    jenkins-data-slave:
+    jenkins-docker-certs-master:
+    
+
+    

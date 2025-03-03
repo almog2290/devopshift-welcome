@@ -1,6 +1,6 @@
 replicaCountReviews: 1
-replicaCountRatings: 1
-replicaCountProductPage: 1
+replicaCountRatings: 2
+replicaCountProductPage: 2
 replicaCountDetails: 1
 
 image:

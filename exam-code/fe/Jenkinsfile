@@ -1,0 +1,75 @@
+pipeline {
+    agent {
+        docker {
+            image 'python:3.10'
+        }
+    }
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-mogli-creds'
+        DOCKER_REGISTRY = 'madaralmog'
+        REPO_NAME = 'fe-exam'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        APP_PATH = 'exam-code/fe'
+    }
+    stages {
+        stage('Clone Python Project') {
+            steps {
+                git branch: 'jenkins-workshop', url: 'https://github.com/almog2290/devopshift-welcome.git'
+            }
+        }
+
+        stage('Lint & Security Scan'){
+            parallel{
+                stage('Lint'){
+                    steps{
+                        sh '''
+                            pip install flake8
+                            flake8 .
+                        '''
+                    }
+                }
+                stage('Security Scan'){
+                    steps{
+                        sh '''
+                            pip install bandit
+                            bandit -r .
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG ."
+                sh "docker tag $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$REPO_NAME:latest"
+            }
+        }
+
+        stage('Run Tests in Container') {
+            steps {
+                sh "docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest tests/"
+            }
+        }
+
+        stage('Integration Test with Docker Compose') {
+            steps {
+                dir('../'){
+                    sh 'docker-compose up -d'
+                    sleep time: 10, unit: 'SECONDS'  // Wait for services to start
+                    sh 'curl -f http://localhost:5002 || exit 1'  // Adjust port for backend if needed
+                    sh 'docker-compose down'
+                }
+            }
+        }
+
+    }

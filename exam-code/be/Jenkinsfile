@@ -1,0 +1,102 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-mogli-creds') 
+        DOCKER_REGISTRY = 'madaralmog'
+        REPO_NAME = 'be-exam'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        APP_PATH = 'exam-code/be'
+    }
+    stages {
+        stage('Clone Python Project') {
+            steps {
+                git branch: 'jenkins-workshop', url: 'https://github.com/almog2290/devopshift-welcome.git'
+            }
+        }
+
+        stage('Lint & Security Scan'){
+            parallel{
+                stage('Lint'){
+                    steps{
+                        dir(env.APP_PATH){
+                            sh '''
+                                pip install flake8
+                                flake8 . || true
+                            '''
+                        }
+                    }
+                }
+                
+                stage('Security Scan'){
+                    steps{
+                        dir(env.APP_PATH){
+                            sh '''
+                                pip install bandit
+                                bandit -r . || true
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            agent{
+                docker {
+                    image 'python:3.10'
+                    args '-v $HOME/.cache/pip:/root/.cache/pip'
+                }
+            }
+            steps {
+                dir(env.APP_PATH){
+                    sh '''
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir(env.APP_PATH){
+                    sh "docker build -t $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG ."
+                    sh "docker tag $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$REPO_NAME:latest"
+                }
+            }
+        }
+
+        stage('Run Tests in Container') {
+            steps {
+                dir(env.APP_PATH){
+                    sh "docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest tests/"
+                }
+            }
+        }
+
+        stage('Integration Test with Docker Compose') {
+            steps {
+                dir('exam-code'){
+                    sh '''
+                        curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                        chmod +x /usr/local/bin/docker-compose
+                    '''
+                    sh 'docker-compose up -d'
+                    sleep time: 10, unit: 'SECONDS'  // Wait for services to start
+                    sh 'docker ps | grep -q 5001 && echo "Port 5001 is mapped and the container is running." || exit 1 ' // Adjust port for backend if needed
+                    sh 'docker-compose down'
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG"
+                sh "docker push $DOCKER_REGISTRY/$REPO_NAME:latest"
+            }
+        }
+    }
+}

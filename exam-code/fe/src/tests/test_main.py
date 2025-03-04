@@ -12,16 +12,19 @@ def client():
     with app.test_client() as client:
         yield client
 
+
 def test_homepage(client):
     """Test if homepage loads successfully"""
     response = client.get("/")
     assert response.status_code == 200
     assert b"Fetch Prices" in response.data  # Adjust based on actual page content
 
+
 def test_invalid_route(client):
     """Test an invalid route returns 404"""
     response = client.get("/nonexistent")
     assert response.status_code == 404
+
 
 def test_api_response(client):
     """Test a sample API endpoint"""

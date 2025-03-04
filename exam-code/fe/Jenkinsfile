@@ -26,6 +26,7 @@ pipeline {
                         }
                     }
                 }
+                
                 stage('Security Scan'){
                     steps{
                         dir(env.APP_PATH){

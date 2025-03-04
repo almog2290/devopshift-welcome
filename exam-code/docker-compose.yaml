@@ -1,36 +1,58 @@
 services:
   web:
     build: ./fe
-    image: "yanivomc/fe-exam:latest"
+    depends_on:
+      backend-service:
+        condition: service_healthy
     ports:
       - "5002:5002"
-    depends_on:
-      - backend-service
     networks:
-      - internal
-
+      - crypto
   backend-service:
     build: ./be
-    image: "yanivomc/be-exam:latest"
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    ports:
+      - "5003:5001"
     networks:
-      - internal
+      - crypto
     environment:
-      - MYSQL_HOST=mysqldb
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=123456
-
+      MYSQL_HOST: mysqldb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:5001/fetch_price"]
+      interval: 30s
+      retries: 10
+      start_period: 20s
   mysqldb:
-      image: mysql:5.7
-      networks:
-        - internal
-      environment:
-        MYSQL_ROOT_PASSWORD: 123456
-        # create database name crypto_db
-        MYSQL_DATABASE: crypto_db
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    networks:
+      - crypto
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: crypto_db
+      MYSQL_ROOT_PASSWORD: 123456
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=123456"]
+      interval: 30s
+      retries: 10
+      start_period: 60s
 
+      
 networks:
-  internal:
+  crypto:
     driver: bridge
+
+volumes:
+  db_data:
+
+  
+
 
 
   

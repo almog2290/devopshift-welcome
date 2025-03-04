@@ -1,12 +1,12 @@
 import sys
 import os
-import pytest
-from mainfe import app  # Assuming the frontend is a Flask app
 
 # Add the src directory to the Python path
 tmp_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, tmp_path)
 
+import pytest
+from mainfe import app  # Assuming the frontend is a Flask app
 
 @pytest.fixture
 def client():

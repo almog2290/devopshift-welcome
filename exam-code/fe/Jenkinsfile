@@ -5,7 +5,7 @@ pipeline {
         }
     }
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-mogli-creds'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-mogli-creds') 
         DOCKER_REGISTRY = 'madaralmog'
         REPO_NAME = 'fe-exam'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
@@ -69,6 +69,14 @@ pipeline {
                     sh 'curl -f http://localhost:5002 || exit 1'  // Adjust port for backend if needed
                     sh 'docker-compose down'
                 }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG"
+                sh "docker push $DOCKER_REGISTRY/$REPO_NAME:latest"
             }
         }
 

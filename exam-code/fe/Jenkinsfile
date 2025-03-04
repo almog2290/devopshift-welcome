@@ -22,18 +22,22 @@ pipeline {
             parallel{
                 stage('Lint'){
                     steps{
-                        sh '''
-                            pip install flake8
-                            flake8 .
-                        '''
+                        dir(env.APP_PATH){
+                            sh '''
+                                pip install flake8
+                                flake8 .
+                            '''
+                        }
                     }
                 }
                 stage('Security Scan'){
                     steps{
-                        sh '''
-                            pip install bandit
-                            bandit -r .
-                        '''
+                        dir(env.APP_PATH){
+                            sh '''
+                                pip install bandit
+                                bandit -r .
+                            '''
+                        }
                     }
                 }
             }
@@ -41,30 +45,36 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                dir(env.APP_PATH){
+                    sh '''
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG ."
-                sh "docker tag $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$REPO_NAME:latest"
+                dir(env.APP_PATH){
+                    sh "docker build -t $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG ."
+                    sh "docker tag $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$REPO_NAME:latest"
+                }
             }
         }
 
         stage('Run Tests in Container') {
             steps {
-                sh "docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest tests/"
+                dir(env.APP_PATH){
+                    sh "docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest tests/"
+                }
             }
         }
 
         stage('Integration Test with Docker Compose') {
             steps {
-                dir('../'){
-                    sh 'docker-compose up -d'
+                dir('exam-code'){
+                    sh 'docker compose up -d'
                     sleep time: 10, unit: 'SECONDS'  // Wait for services to start
                     sh 'curl -f http://localhost:5002 || exit 1'  // Adjust port for backend if needed
                     sh 'docker-compose down'
@@ -79,6 +89,5 @@ pipeline {
                 sh "docker push $DOCKER_REGISTRY/$REPO_NAME:latest"
             }
         }
-
     }
 }

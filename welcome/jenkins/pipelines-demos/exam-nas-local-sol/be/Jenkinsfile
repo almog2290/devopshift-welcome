@@ -1,0 +1,112 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-mogli-creds') 
+        DOCKER_REGISTRY = 'madaralmog'
+        REPO_NAME = 'backend-workshop'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        APP_PATH = 'be'
+    }
+    stages {
+        stage('Clone Python Project') {
+            steps {
+                git branch: 'main', url: 'https://gitea.moglidev.xyz/mamba/jenkins_quiz_jb_frontend.git'
+            }
+        }
+
+        stage('Lint & Security Scan'){
+            parallel{
+                stage('Lint'){
+                    steps{
+                        dir(env.APP_PATH){
+                            sh '''
+                                python -m venv .venv
+                                . .venv/bin/activate  # source .venv/bin/activate (Bash)
+                                pip install flake8
+                                python -m flake8 ./src --exclude=tests
+                            '''
+                        }
+                    }
+                }
+                
+                stage('Security Scan'){
+                    steps{
+                        dir(env.APP_PATH){
+                            sh '''
+                                python -m venv .venv
+                                . .venv/bin/activate  # source .venv/bin/activate (Bash)
+                                pip install bandit
+                                python -m bandit -r ./src --exclude=tests
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            agent{
+                docker {
+                    image 'python:3.10'
+                    args '-v $HOME/.cache/pip:/root/.cache/pip'
+                    reuseNode true
+                }
+            }
+            steps {
+                dir(env.APP_PATH){
+                    sh '''
+                        export HOME=${WORKSPACE}
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir(env.APP_PATH){
+                    sh "docker build -t $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG ."
+                    sh "docker tag $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$REPO_NAME:latest"
+                }
+            }
+        }
+
+        stage('Run Tests in Container') {
+            steps {
+                dir(env.APP_PATH){
+                    sh "docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest "
+                }
+            }
+        }
+
+        stage('Integration Test with Docker Compose') {
+            steps {
+                sh '''
+                    sudo apt-get update
+                    sudo apt-get install -y docker-compose
+                '''
+                sh 'docker-compose up -d'
+                sleep time: 10, unit: 'SECONDS'  // Wait for services to start
+                sh 'docker ps | grep -q 5001 && echo "Port 5001 is mapped and the container is running." || exit 1 ' // Adjust port for backend if needed
+                sh 'docker-compose down'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG"
+                sh "docker push $DOCKER_REGISTRY/$REPO_NAME:latest"
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Cleaning up workspace'
+            cleanWs()
+        }
+    }
+}

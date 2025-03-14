@@ -12,7 +12,7 @@ variable "az_list" {
 
 # prefix name
 variable "prefix_name" {
-  default = "devops"
+  default = "AM-devops"
   description = "Prefix name"
 }
 

@@ -19,6 +19,13 @@ pipeline {
         stage('Lint & Security Scan'){
             parallel{
                 stage('Lint'){
+                    agent{
+                        docker {
+                            image 'python:3.10'
+                            args '-v $HOME/.cache/pip:/root/.cache/pip'
+                            reuseNode true
+                        }
+                    }
                     steps{
                         dir(env.APP_PATH){
                             sh '''
@@ -32,6 +39,13 @@ pipeline {
                 }
                 
                 stage('Security Scan'){
+                    agent{
+                        docker {
+                            image 'python:3.10'
+                            args '-v $HOME/.cache/pip:/root/.cache/pip'
+                            reuseNode true
+                        }
+                    }
                     steps{
                         dir(env.APP_PATH){
                             sh '''
@@ -85,8 +99,8 @@ pipeline {
         stage('Integration Test with Docker Compose') {
             steps {
                 sh '''
-                    sudo apt-get update
-                    sudo apt-get install -y docker-compose
+                    curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    chmod +x /usr/local/bin/docker-compose
                 '''
                 sh 'docker-compose up -d'
                 sleep time: 10, unit: 'SECONDS'  // Wait for services to start

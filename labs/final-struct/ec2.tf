@@ -1,5 +1,5 @@
 resource "aws_security_group" "ec2_sg" {
-  vpc_id = var.create_vpc ? aws_vpc.vpc.id : data.aws_vpc.default.id
+  vpc_id = var.create_vpc ? aws_vpc.vpc[0].id : data.aws_vpc.default.id
   
   dynamic "ingress" {
     for_each = var.ports
@@ -26,7 +26,7 @@ resource "aws_instance" "vm" {
   associate_public_ip_address = var.associate_public_ip
   key_name = aws_key_pair.deployer_key.key_name
   
-  subnet_id = var.create_vpc ? aws_subnet.subnet.id : data.aws_subnet.default.id
+  subnet_id = var.create_vpc ? aws_subnet.subnet[0].id : data.aws_subnet.default.id
 
   depends_on = [aws_key_pair.deployer_key]
 

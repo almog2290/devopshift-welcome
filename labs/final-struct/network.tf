@@ -15,7 +15,7 @@ resource "aws_vpc" "vpc" {
 resource "aws_subnet" "subnet" {
     count = var.create_vpc ? 1 : 0
 
-    vpc_id            = aws_vpc.vpc.id
+    vpc_id            = aws_vpc.vpc[0].id
     cidr_block        = var.cidr_block_subnet
     map_public_ip_on_launch = true #Subnet 1 is public
     availability_zone = random_shuffle.random_az.result[0]
@@ -47,7 +47,7 @@ data "aws_subnet" "default" {
 
 # Create an Internet Gateway
 resource "aws_internet_gateway" "igw" {
-    vpc_id = var.create_vpc ? aws_vpc.vpc.id : data.aws_vpc.default.id
+    vpc_id = var.create_vpc ? aws_vpc.vpc[0].id : data.aws_vpc.default.id
 
     tags = {
         Name = "${var.prefix_name}-igw"
@@ -56,7 +56,7 @@ resource "aws_internet_gateway" "igw" {
 
 # Create a route table for the public subnet
 resource "aws_route_table" "public_rt" {
-    vpc_id = var.create_vpc ? aws_vpc.vpc.id : data.aws_vpc.default.id
+    vpc_id = var.create_vpc ? aws_vpc.vpc[0].id : data.aws_vpc.default.id
 
     route {
         cidr_block = "0.0.0.0/0"
@@ -70,7 +70,7 @@ resource "aws_route_table" "public_rt" {
 
 # Associate the public subnet with the public route table (Connection)
 resource "aws_route_table_association" "public_rt_connect" {
-    subnet_id      = var.create_vpc ? aws_subnet.subnet.id : data.aws_subnet.default.id
+    subnet_id      = var.create_vpc ? aws_subnet.subnet[0].id : data.aws_subnet.default.id
     route_table_id = aws_route_table.public_rt.id
 }
 

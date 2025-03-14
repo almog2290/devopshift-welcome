@@ -1,5 +1,5 @@
 output "vpc_subnet_info" {
- value = var.create_vpc ? "The following is your VPC: ${aws_vpc.vpc.id} and Subnet: ${aws_subnet.subnet.id}" : "Using default VPC (${data.aws_vpc.default.id}) and Subnet (${data.aws_subnet.default.id})"
+ value = var.create_vpc ? "The following is your VPC: ${aws_vpc.vpc[0].id} and Subnet: ${aws_subnet.subnet[0].id}" : "Using default VPC (${data.aws_vpc.default.id}) and Subnet (${data.aws_subnet.default.id})"
  description = "values of VPC and Subnet"
 }
 

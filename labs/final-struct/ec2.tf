@@ -19,7 +19,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-resource "aws_instance" "vm" {
+resource "aws_instance" "builder_vm" {
   ami           = var.ami 
   instance_type = var.instance_type
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]

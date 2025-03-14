@@ -1,5 +1,5 @@
 resource "time_sleep" "wait_for_ip" {
-  depends_on = [ aws_instance.vm ]
+  depends_on = [ aws_instance.builder_vm ]
   create_duration = "45s"  # Introduce a delay of 45 seconds
 }
 
@@ -11,7 +11,7 @@ resource "null_resource" "install_dockerAndDockerCompose" {
       type        = "ssh"
       user        = "ubuntu"  # Adjust based on your AMI's default user
       private_key = file(var.ssh_key_path_private)  # Path to your private key
-      host        = aws_instance.vm.public_ip
+      host        = aws_instance.builder_vm.public_ip
     }
 
     inline = [

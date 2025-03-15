@@ -1,13 +1,29 @@
-# Dockerfile for Frontend Service
-FROM python:3.12-slim
+# Build stage
+FROM python:3.12 AS builder
+
+WORKDIR /build
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+
+# Create wheels directory
+RUN mkdir -p /wheels
+# Build wheels for all dependencies
+RUN pip wheel --no-cache-dir --wheel-dir=/wheels -r requirements.txt
+
+# Final stage (application)
+FROM python:3.12-slim AS application
 
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy wheels and install from them
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
+    && rm -rf /wheels && rm -rf /root/.cache/pip
 
+# Copy application code
 COPY ./src .
 
-CMD ["python", "mainfe.py"]
-
 EXPOSE 5002
+
+CMD ["python", "mainfe.py"]

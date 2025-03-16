@@ -6,10 +6,9 @@ WORKDIR /build
 # Copy requirements and install dependencies
 COPY requirements.txt .
 
-# Create wheels directory
-RUN mkdir -p /wheels
-# Build wheels for all dependencies
-RUN pip wheel --no-cache-dir --wheel-dir=/wheels -r requirements.txt
+# Create wheels directory and build wheels in a single layer
+RUN mkdir -p /wheels && \
+    pip wheel --no-cache-dir --wheel-dir=/wheels -r requirements.txt
 
 # Final stage (application)
 FROM python:3.12-slim AS application
